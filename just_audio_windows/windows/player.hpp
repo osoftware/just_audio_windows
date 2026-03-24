@@ -118,6 +118,7 @@ private:
 
 class AudioPlayer {
 private:
+  bool disposed_ = false;
   /* data */
 public:
   std::string id;
@@ -215,6 +216,7 @@ public:
     });
   }
   AudioPlayer::~AudioPlayer() {
+    disposed_ = true;
     player_channel_->SetMethodCallHandler(nullptr);
     mediaPlayer.Close();
   }
@@ -413,6 +415,7 @@ public:
     } else if (method_call.method_name().compare("androidEqualizerBandSetGain") == 0) {
       result->Success(flutter::EncodableMap());
     } else if (method_call.method_name().compare("dispose") == 0) {
+      // disposed_ = true;
       mediaPlayer.Close();
       result->Success(flutter::EncodableMap());
     } else {
@@ -513,6 +516,11 @@ public:
   }
 
   void AudioPlayer::broadcastPlaybackEvent() {
+    if (disposed_) {
+      std::cerr << "[just_audio_windows] Player disposed, cannot broadcast playback event" << std::endl;
+      return;
+    }
+    
     auto session = mediaPlayer.PlaybackSession();
 
     auto eventData = flutter::EncodableMap();
@@ -568,6 +576,11 @@ public:
   }
 
   void AudioPlayer::broadcastDataEvent() {
+    if (disposed_) {
+      std::cerr << "[just_audio_windows] Player disposed, cannot broadcast data event" << std::endl;
+      return;
+    }
+    
     auto session = mediaPlayer.PlaybackSession();
     auto eventData = flutter::EncodableMap();
 
